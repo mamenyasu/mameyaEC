@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Dto\MemberDto;
+use App\Http\Requests\CheckoutConfirmRequest;
+use App\Models\Order;
 use App\Models\Product;
 use App\Services\MemberDto_buildService;
+use App\Services\OrderService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Auth;
@@ -46,11 +49,11 @@ class MemberIndexController extends Controller
                 'image_url' => $product->image_url,
                 'qty'       => 1,
             ];
-
-            session()->put('cart', $cart);
-
-            return response()->noContent();
         }
+
+        session()->put('cart', $cart);
+
+        return response()->noContent();
     }
 
 
@@ -101,51 +104,76 @@ class MemberIndexController extends Controller
         ]);
     }
 
-    /**
-     * 決済処理
-     */
-    public function checkoutProcess(Request $request)
+
+
+    public function checkoutConfirm(CheckoutConfirmRequest $request)
     {
-        // ▼ バリデーション（必要最低限）
+        // バリデーション済みデータ
+        $validated = $request->validated();
+
+        // セッションからカートを取得（商品情報が丸ごと入っている）
+        $cart = session('cart', []);
+
+        // カートが空なら戻す
+        if (empty($cart)) {
+            return redirect()->route('cartIndex')
+                ->with('error', 'カートが空です。');
+        }
+
+        // 配列のまま Blade に渡す
+        $cartItems = collect($cart);
+
+        return view('checkoutConfirm', [
+            'data' => $validated,
+            'cartItems' => $cartItems,
+        ]);
+    }
+
+
+    public function complete(Request $request, OrderService $orderService)
+    {
+        $cartItems = session('cart', []);
+
+        if (empty($cartItems)) {
+            return redirect()->route('cart')->with('error', 'カートが空です');
+        }
+
+        $order = $orderService->createOrder($request->all(), $cartItems);
+
+        session()->flash('order_id', $order->id);
+        session()->forget('cart');
+
+        return redirect()->route('checkoutThanks');
+    }
+
+    public function profileUpdate(Request $request)
+    {
+        $user = auth()->user();
+
+        // バリデーション
         $validated = $request->validate([
-            'name'        => 'required|string|max:255',
-            'address'     => 'required|string|max:255',
-            'phone'       => 'required|string|max:20',
-            'email'       => 'required|email',
-            'payment'     => 'required|in:cod,card',
-            'card_number' => 'nullable|string',
-            'card_exp'    => 'nullable|string',
-            'card_cvc'    => 'nullable|string',
+            'name'    => 'required|string|max:255',
+            'email'   => 'required|email|max:255|unique:users,email,' . $user->id,
+            'tel'     => 'nullable|string|max:255',
+            'address' => 'nullable|string|max:255',
         ]);
 
-        // ▼ カード決済の場合のみカード情報必須
-        if ($validated['payment'] === 'card') {
-            $request->validate([
-                'card_number' => 'required|string',
-                'card_exp'    => 'required|string',
-                'card_cvc'    => 'required|string',
-            ]);
-        }
+        // 更新処理
+        $user->update($validated);
 
-        // ▼ カート取得
-        $cart = Session::get('cart', []);
+        // 完了後はプロフィール編集画面に戻す
+        return redirect()
+            ->route('profileEdit')
+            ->with('success', 'プロフィールを更新しました');
+    }
 
-        if (empty($cart)) {
-            return redirect()->route('cartIndex')->with('error', 'カートが空です');
-        }
+    public function ordersIndex()
+    {
+        $orders = Order::where('user_id', auth()->id())
+            ->with('items')
+            ->orderBy('created_at', 'desc')
+            ->get();
 
-        // ▼ 注文データ保存（ここは後で OrderService に切り出してもOK）
-        // 今は簡易的にログに出すだけ
-        /*\Log::info('注文データ', [
-            'user'     => Auth::user(),
-            'customer' => $validated,
-            'cart'     => $cart,
-        ]);*/
-
-        // ▼ カートを空にする
-        Session::forget('cart');
-
-        // ▼ 完了ページへ
-        return redirect()->route('checkout.complete');
+        return view('orders', compact('orders'));
     }
 }

@@ -16,8 +16,7 @@
                 required
                 autofocus
                 autocomplete="name"
-                :placeholder="__('Full name')"
-            />
+                :placeholder="__('Full name')" />
 
             <!-- Email Address -->
             <flux:input
@@ -27,8 +26,25 @@
                 type="email"
                 required
                 autocomplete="email"
-                placeholder="email@example.com"
-            />
+                placeholder="email@example.com" />
+
+            <!--tel-->
+            <flux:input
+                name="tel"
+                :label="__('電話番号')"
+                :value="old('tel')"
+                type="text"
+                autocomplete="tel"
+                :placeholder="__('電話番号')" />
+
+            <!--address-->
+            <flux:input
+                name="address"
+                :label="__('住所')"
+                :value="old('address')"
+                type="text"
+                autocomplete="street-address"
+                :placeholder="__('住所')" />
 
             <!-- Password -->
             <flux:input
@@ -39,8 +55,7 @@
                 autocomplete="new-password"
                 :placeholder="__('Password')"
                 passwordrules="{{ \Illuminate\Validation\Rules\Password::defaults()->toPasswordRulesString() }}"
-                viewable
-            />
+                viewable />
 
             <!-- Confirm Password -->
             <flux:input
@@ -51,8 +66,7 @@
                 autocomplete="new-password"
                 :placeholder="__('Confirm password')"
                 passwordrules="{{ \Illuminate\Validation\Rules\Password::defaults()->toPasswordRulesString() }}"
-                viewable
-            />
+                viewable />
 
             <div class="flex items-center justify-end">
                 <flux:button type="submit" variant="primary" class="w-full" data-test="register-user-button">

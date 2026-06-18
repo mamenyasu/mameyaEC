@@ -14,18 +14,32 @@
 </head>
 
 <body class="bg-gray-100">
-    <div class="flex min-h-screen">
+    <div class="flex m-h-screen">
 
         <!-- サイドバー -->
         <aside class="w-64 bg-white shadow-md p-6 space-y-6">
             <h2 class="text-xl font-bold">メニュー</h2>
 
             <nav class="space-y-3">
-                <a href="#" class="block text-gray-700 hover:text-blue-600">アカウント</a>
+                <a href="{{ auth()->check() ? route('profileEdit') : route('login') }}" class="block text-gray-700 hover:text-blue-600"> {{ auth()->check() ? 'アカウント' : 'ログイン' }}</a>
                 <a href="{{route('cartIndex')}}" class="block text-gray-700 hover:text-blue-600">カート</a>
-                <a href="#" class="block text-gray-700 hover:text-blue-600">注文履歴</a>
+                <a href="{{route('ordersIndex')}}" class="block text-gray-700 hover:text-blue-600">注文履歴</a>
                 <a href="{{route('mainEC')}}" class="block text-gray-700 hover:text-blue-600">商品一覧</a>
             </nav>
+
+            <div x-data="{ open: false }" class="mt-10">
+                <!-- 表示部分 -->
+                <button
+                    @click="open = !open"
+                    class="w-full text-left bg-gray-100 p-4 rounded shadow hover:bg-gray-200">
+                    <p class="text-sm text-gray-600">
+                        ようこそ
+                        <span class="font-bold">
+                            {{ auth()->check() ? auth()->user()->name . ' さん' : 'ゲストさん' }}
+                        </span>
+                    </p>
+                </button>
+            </div>
         </aside>
 
         <!-- メインエリア -->
@@ -67,7 +81,7 @@
     <script>
         document.querySelectorAll('.add-to-cart').forEach(btn => {
             btn.addEventListener('click', async () => {
-    
+
                 const id = btn.dataset.id;
 
                 await fetch('/cart/add', {
@@ -76,7 +90,9 @@
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
-                    body: JSON.stringify({id})
+                    body: JSON.stringify({
+                        id
+                    })
                 });
 
             });
