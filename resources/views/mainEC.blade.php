@@ -40,6 +40,17 @@
                     </p>
                 </button>
             </div>
+
+            <hr class="my-4 border-gray-300">
+
+            <div class="mt-8">
+                <a href="http://www.mamemame.shop/hotelmameya" target="_blank" rel="noopener noreferrer"
+                    class="text-blue-600 hover:text-blue-800 underline">
+                    ホテルまめやへ
+                </a>
+            </div>
+
+
         </aside>
 
         <!-- メインエリア -->
@@ -52,9 +63,9 @@
                 @foreach ($products as $product)
                 <div class="bg-white rounded-lg shadow p-4">
                     <!-- 商品画像 -->
-                    <img src="{{ $product->image_url }}"
+                    <img src="{{ asset('storage/images/placeholder.png') }}"
                         alt="{{ $product->name }}"
-                        class="w-full aspect-[3/2] object-cover rounded mb-3">
+                        class="w-full aspect-[3/2] object-cover rounded mb-3"> <!--画像が準備できたら差し替え{{ $product->image_url }}"-->
 
                     <!-- 商品名 -->
                     <h3 class="font-semibold">{{ $product->name }}</h3>
